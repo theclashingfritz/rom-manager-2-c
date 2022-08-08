@@ -4,6 +4,9 @@ import struct
 #skip ending for now because script inf loops or something idk
 #needs investigation
 Num2LevelName = {
+    1:'unk1',
+    2:'unk2',
+    3:'unk3',
     4:'bbh',
     5:"ccm",
     7:'hmc',
@@ -31,9 +34,13 @@ Num2LevelName = {
     29:'totwc',
     30:'bowser_1',
     31:'wmotr',
+    32:'unk32',
     33:'bowser_2',
     34:'bowser_3',
-    36:'ttm'
+    35:'unk35',
+    36:'ttm',
+    37:'unk37',
+    38:'unk38',
 }
 
 #Levelname uses a different castle inside name which is dumb
@@ -823,9 +830,15 @@ Course_Names= {
 	24:"COURSE_CAKE_END"
 }
 
-UPA = (lambda x,y,z,w: struct.unpack("%s"%z,x[y:y+w]))
-def UPF(rom,pointer):
-	return struct.unpack(">3f",rom[pointer:pointer+12])
+#UPA = (lambda x, y, z, w: struct.unpack("%s" % z, x[y:y+w]))
+
+def UPA(rom, offset, z, unps):
+    #print(hex(offset))
+    #print(rom[offset:offset + unps].hex())
+    return struct.unpack("%s" % z, rom[offset:offset + unps])
+
+def UPF(rom, pointer):
+	return struct.unpack(">3f", rom[pointer:pointer + 12])
 
 #The locations of the star positions. For koopa its args to UPA, else its 0, RM pos, Editor pos
 #None means its not supported in editor/rom manager
@@ -881,18 +894,27 @@ TrackHardCodedCols={
 
 #**Trajectory. So this is the location of the pointer to the trajectory in the rom
 Trajectories = {
-	'KoopaBoB':0xEd864,
-	'KoopaTHI':0xEd874,
-	'rr_seg7_trajectory_0702EC3C_RM2C':0xED9DC,
-	'rr_seg7_trajectory_0702ECC0_RM2C':0xED9E0,
-	'ccm_seg7_trajectory_0701669C_RM2C':0xED9E4,
-	'bitfs_seg7_trajectory_070159AC_RM2C':0xED9E8,
-	'hmc_seg7_trajectory_0702B86C_RM2C':0xED9EC,
-	'lll_seg7_trajectory_0702856C_RM2C':0xED9F0,
-	'lll_seg7_trajectory_07028660_RM2C':0xED9F4,
-	'rr_seg7_trajectory_0702ED9C_RM2C':0xED9F8,
-	'rr_seg7_trajectory_0702EEE0_RM2C':0xED9FC,
-	'ccm_seg7_trajectory_penguin_race_RM2C':0xCCA6C #this one is loaded via asm
+	'KoopaBoB': 0xED864,
+	'KoopaTHI': 0xED874,
+	'rr_seg7_trajectory_0702EC3C_RM2C': 0xED9DC,
+	'rr_seg7_trajectory_0702ECC0_RM2C': 0xED9E0,
+	'ccm_seg7_trajectory_0701669C_RM2C': 0xED9E4,
+	'bitfs_seg7_trajectory_070159AC_RM2C': 0xED9E8,
+	'hmc_seg7_trajectory_0702B86C_RM2C': 0xED9EC,
+	'lll_seg7_trajectory_0702856C_RM2C': 0xED9F0,
+	'lll_seg7_trajectory_07028660_RM2C': 0xED9F4,
+	'rr_seg7_trajectory_0702ED9C_RM2C': 0xED9F8,
+	'rr_seg7_trajectory_0702EEE0_RM2C': 0xED9FC,
+    # These are loaded via asm
+	'ccm_seg7_trajectory_penguin_race_RM2C': (0xCCA6E, 0xCCA76),
+    'ccm_seg7_trajectory_snowman_RM2C': (0xABC9E, 0xABCA6),
+    # These are loaded from asm as well, But in a different manner.
+    'bob_seg7_metal_ball_path0_RM2C': (0xA9AB4, 0xA9ABC),
+    'bob_seg7_metal_ball_path1_RM2C': (0xA9AD4, 0xA9ADC),
+    'ttm_seg7_trajectory_RM2C': (0xA9AF4, 0xA9AFC),
+    # These are not stored in level data and are loaded by ASM.
+    'sThiHugeMetalBallTraj_RM2C': 0xA9B1C,
+    'sThiTinyMetalBallTraj_RM2C': 0xA9B38,
 }
 
 DefaultTraj = {
@@ -1309,6 +1331,136 @@ DefaultTraj = {
     TRAJECTORY_POS(50, /*pos*/ -6488, -5684, -4777),
     TRAJECTORY_POS(51, /*pos*/ -6488, -5829, -6088),
     TRAJECTORY_POS(52, /*pos*/ -6507, -5841, -6400),
+    TRAJECTORY_END(),
+};
+''',
+	'ccm_seg7_trajectory_snowman_RM2C':'''const Trajectory ccm_seg7_trajectory_snowman_RM2C_path[] = {
+    TRAJECTORY_POS(0, /*pos*/  2501,  2662,  -975),
+    TRAJECTORY_POS(1, /*pos*/  2533,  2560,  -800),
+    TRAJECTORY_POS(2, /*pos*/  2566,  2300,  -500),
+    TRAJECTORY_POS(3, /*pos*/  2600,  1884,   733),
+    TRAJECTORY_POS(4, /*pos*/  2466,  1647,  1835),
+    TRAJECTORY_POS(5, /*pos*/  2000,  1483,  2233),
+    TRAJECTORY_POS(6, /*pos*/   766,  1321,  2400),
+    TRAJECTORY_POS(7, /*pos*/  -872,  1190,  2033),
+    TRAJECTORY_POS(8, /*pos*/ -3072,  1097,  1300),
+    TRAJECTORY_POS(9, /*pos*/ -3805,   882,  -366),
+    TRAJECTORY_POS(10, /*pos*/ -3758,   819, -1513),
+    TRAJECTORY_POS(11, /*pos*/ -3145,   786, -2426),
+    TRAJECTORY_POS(12, /*pos*/ -1658,   546, -2853),
+    TRAJECTORY_POS(13, /*pos*/  -138,   300, -3000),
+    TRAJECTORY_POS(14, /*pos*/  1966,  -192, -2800),
+    TRAJECTORY_POS(15, /*pos*/  3066,  -456, -2800),
+    TRAJECTORY_POS(16, /*pos*/  3933,  -461, -2999),
+    TRAJECTORY_POS(17, /*pos*/  4266,  -188, -3433),
+    TRAJECTORY_POS(18, /*pos*/  3901,  -402, -3800),
+    TRAJECTORY_POS(19, /*pos*/  3133,  -579, -3866),
+    TRAJECTORY_POS(20, /*pos*/  2033,  -855, -3800),
+    TRAJECTORY_POS(21, /*pos*/   766, -1073, -3633),
+    TRAJECTORY_POS(22, /*pos*/ -1100, -1142, -3744),
+    TRAJECTORY_POS(23, /*pos*/ -2318, -1188, -3658),
+    TRAJECTORY_POS(24, /*pos*/ -3318, -1228, -3375),
+    TRAJECTORY_POS(25, /*pos*/ -4010, -1267, -2802),
+    TRAJECTORY_POS(26, /*pos*/ -4470, -1368, -2151),
+    TRAJECTORY_POS(27, /*pos*/ -4679, -1358, -1321),
+    TRAJECTORY_POS(28, /*pos*/ -4770, -1333,  -648),
+    TRAJECTORY_POS(29, /*pos*/ -4847, -1351,    40),
+    TRAJECTORY_END(),
+};
+''',
+	'bob_seg7_metal_ball_path0_RM2C':'''const Trajectory bob_seg7_metal_ball_path0_RM2C_path[] = {
+    TRAJECTORY_POS(0, /*pos*/  1535,  3839, -5561),
+    TRAJECTORY_POS(1, /*pos*/  1514,  3804, -5886),
+    TRAJECTORY_POS(2, /*pos*/  1927,  3827, -6232),
+    TRAJECTORY_POS(3, /*pos*/  2717,  3715, -6740),
+    TRAJECTORY_POS(4, /*pos*/  3113,  3668, -6918),
+    TRAJECTORY_POS(5, /*pos*/  3503,  3638, -6783),
+    TRAJECTORY_POS(6, /*pos*/  4863,  3354, -5954),
+    TRAJECTORY_POS(7, /*pos*/  5081,  3221, -5754),
+    TRAJECTORY_POS(8, /*pos*/  5118,  3209, -5481),
+    TRAJECTORY_POS(9, /*pos*/  5147,  3185, -3712),
+    TRAJECTORY_POS(10, /*pos*/  5016,  3149, -3370),
+    TRAJECTORY_POS(11, /*pos*/  4609,  3137, -3118),
+    TRAJECTORY_POS(12, /*pos*/  3075,  2909, -2345),
+    TRAJECTORY_POS(13, /*pos*/  2784,  1634, -2237),
+    TRAJECTORY_POS(14, /*pos*/  1926,  1505, -1139),
+    TRAJECTORY_POS(15, /*pos*/   517,   773,  -438),
+    TRAJECTORY_POS(16, /*pos*/ -1275,   179,   -83),
+    TRAJECTORY_POS(17, /*pos*/ -2089,     5,   -24),
+    TRAJECTORY_END(),
+};
+''',
+	'bob_seg7_metal_ball_path1_RM2C':'''const Trajectory bob_seg7_metal_ball_path1_RM2C_path[] = {
+    TRAJECTORY_POS(0, /*pos*/   524,  2825, -5400),
+    TRAJECTORY_POS(1, /*pos*/   399,  2597, -5725),
+    TRAJECTORY_POS(2, /*pos*/   499,  2567, -5975),
+    TRAJECTORY_POS(3, /*pos*/   699,  2556, -6150),
+    TRAJECTORY_POS(4, /*pos*/   949,  2548, -6250),
+    TRAJECTORY_POS(5, /*pos*/  1549,  2525, -6600),
+    TRAJECTORY_POS(6, /*pos*/  2575,  2482, -7125),
+    TRAJECTORY_POS(7, /*pos*/  2975,  2466, -7425),
+    TRAJECTORY_POS(8, /*pos*/  3275,  2433, -7450),
+    TRAJECTORY_POS(9, /*pos*/  3800,  2337, -6950),
+    TRAJECTORY_POS(10, /*pos*/  4125,  2279, -6775),
+    TRAJECTORY_POS(11, /*pos*/  5310,  2119, -6500),
+    TRAJECTORY_POS(12, /*pos*/  5635,  2062, -6340),
+    TRAJECTORY_POS(13, /*pos*/  6010,  2004, -5730),
+    TRAJECTORY_POS(14, /*pos*/  5955,  1987, -5270),
+    TRAJECTORY_POS(15, /*pos*/  5540,  1947, -4330),
+    TRAJECTORY_POS(16, /*pos*/  5549,  1933, -4060),
+    TRAJECTORY_POS(17, /*pos*/  6014,  1906, -3198),
+    TRAJECTORY_POS(18, /*pos*/  5740,  1876, -2651),
+    TRAJECTORY_POS(19, /*pos*/  5273,  1840, -2467),
+    TRAJECTORY_POS(20, /*pos*/  3983,  1728, -2218),
+    TRAJECTORY_POS(21, /*pos*/  3640,  1682, -2072),
+    TRAJECTORY_POS(22, /*pos*/  3395,  1683, -1501),
+    TRAJECTORY_POS(23, /*pos*/  3211,  1676, -1190),
+    TRAJECTORY_POS(24, /*pos*/  2961,  1665,  -920),
+    TRAJECTORY_POS(25, /*pos*/   654,   640,  -758),
+    TRAJECTORY_POS(26, /*pos*/ -1618,     0,  -939),
+    TRAJECTORY_END(),
+};
+''',
+	'ttm_seg7_trajectory_RM2C':'''const Trajectory ttm_seg7_trajectory_RM2C_path[] = {
+    TRAJECTORY_POS(0, /*pos*/ -1541,   514, -2125),
+    TRAJECTORY_POS(1, /*pos*/  -843,   410, -2302),
+    TRAJECTORY_POS(2, /*pos*/  -792,   357, -3132),
+    TRAJECTORY_POS(3, /*pos*/  -211,   189, -3153),
+    TRAJECTORY_POS(4, /*pos*/   474,   -31, -2635),
+    TRAJECTORY_POS(5, /*pos*/   944,  -136, -3098),
+    TRAJECTORY_POS(6, /*pos*/  1391,  -157, -3484),
+    TRAJECTORY_POS(7, /*pos*/  1999,  -378, -3257),
+    TRAJECTORY_POS(8, /*pos*/  2475,  -600, -2692),
+    TRAJECTORY_POS(9, /*pos*/  3445,  -952, -2115),
+    TRAJECTORY_POS(10, /*pos*/  3926,  -984,  -681),
+    TRAJECTORY_POS(11, /*pos*/  4281, -3326,   460),
+    TRAJECTORY_END(),
+};
+''',
+	'sThiHugeMetalBallTraj_RM2C':'''const Trajectory sThiHugeMetalBallTraj_RM2C_path[] = {
+    TRAJECTORY_POS(0, /*pos*/ -4786,   101, -2166),
+    TRAJECTORY_POS(1, /*pos*/ -5000,    81, -2753),
+    TRAJECTORY_POS(2, /*pos*/ -5040,    33, -3846),
+    TRAJECTORY_POS(3, /*pos*/ -4966,    38, -4966),
+    TRAJECTORY_POS(4, /*pos*/ -4013,  -259, -4893),
+    TRAJECTORY_POS(5, /*pos*/ -2573, -1019, -4780),
+    TRAJECTORY_POS(6, /*pos*/ -1053, -1399, -4806),
+    TRAJECTORY_POS(7, /*pos*/   760, -1637, -4833),
+    TRAJECTORY_POS(8, /*pos*/  2866, -2047, -4886),
+    TRAJECTORY_POS(9, /*pos*/  3386, -6546, -4833),
+    TRAJECTORY_END(),
+};
+''',
+	'sThiTinyMetalBallTraj_RM2C':'''const Trajectory sThiTinyMetalBallTraj_RM2C_path[] = {
+    TRAJECTORY_POS(0, /*pos*/ -1476,    29,  -680),
+    TRAJECTORY_POS(1, /*pos*/ -1492,    14, -1072),
+    TRAJECTORY_POS(2, /*pos*/ -1500,     3, -1331),
+    TRAJECTORY_POS(3, /*pos*/ -1374,   -17, -1527),
+    TRAJECTORY_POS(4, /*pos*/ -1178,   -83, -1496),
+    TRAJECTORY_POS(5, /*pos*/  -292,  -424, -1425),
+    TRAJECTORY_POS(6, /*pos*/   250,  -491, -1433),
+    TRAJECTORY_POS(7, /*pos*/   862,  -613, -1449),
+    TRAJECTORY_POS(8, /*pos*/  1058, -1960, -1449),
     TRAJECTORY_END(),
 };
 ''',

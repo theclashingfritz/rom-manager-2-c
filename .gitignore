@@ -1,3 +1,4 @@
+*.bat
 *.z64
 ESRGAN/**
 *.config

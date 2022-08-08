@@ -424,6 +424,7 @@ class Mat():
         self.TwoCycle=False
         self.GeoSet=[]
         self.GeoClear=[]
+        
     #calc the hash for an f3d mat and see if its equal to this mats hash
     def MatHashF3d(self,f3d,textures):
         #texture,1 cycle combiner, geo modes (once I implement them)
@@ -445,27 +446,41 @@ class Mat():
             dupe = hash(MyProps) == hash(F3Dprops)
             return dupe
         return False
+        
     def MatHash(self,mat,textures):
         return False
-    def LoadTexture(self,ForceNewTex,textures,path):
+        
+    def LoadTexture(self, ForceNewTex, textures, path):
         tex = textures.get(self.Timg)[0].split('/')[-1]
         tex=tex.replace("#include ",'').replace('"','').replace("'",'').replace("inc.c","png")
-        i = bpy.data.images.get(tex)
-        if not i or ForceNewTex:
-            tex=textures.get(self.Timg)[0]
-            tex=tex.replace("#include ",'').replace('"','').replace("'",'').replace("inc.c","png")
+        image = bpy.data.images.get(tex)
+        if not image or ForceNewTex:
+            tex = textures.get(self.Timg)[0]
+            tex = tex.replace("#include ", '').replace('"', '').replace("'", '').replace("inc.c", "png")
             #deal with duplicate pathing (such as /actors/actors etc.)
             Extra = path.relative_to(Path(bpy.context.scene.decompPath))
             for e in Extra.parts:
-                tex = tex.replace(e+'/','')
+                tex = tex.replace(e + '/', '')
             #deal with actor import path not working for shared textures
             if 'textures' in tex:
                 fp = Path(bpy.context.scene.decompPath) / tex
             else:
                 fp = path/tex
-            return bpy.data.images.load(filepath=str(fp))
+            newImage = bpy.data.images.load(filepath=str(fp))
+            
+            # This fucking crashes Blender lmao.
+            # It's valid but it also freaks Blender out.
+            #override = bpy.context.copy()
+            #override['edit_image'] = newImage
+            #if bpy.ops.image.flip.poll(override):
+            #    bpy.ops.image.flip(override, use_flip_x=True, use_flip_y=True)
+            
+            #newImage.name = newImage.name.replace(".rgba16.png", '')
+            newImage.name = str(len(bpy.data.images))
+            return newImage
         else:
-            return i
+            return image
+            
     def ApplyPBSDFMat(self,mat,textures,path,layer):
         nt = mat.node_tree
         nodes = nt.nodes
@@ -474,11 +489,12 @@ class Mat():
         tex = nodes.new("ShaderNodeTexImage")
         links.new(pbsdf.inputs[0],tex.outputs[0])
         links.new(pbsdf.inputs[19],tex.outputs[1])
-        i = self.LoadTexture(bpy.context.scene.LevelImp.ForceNewTex,textures,path)
-        if i:
-            tex.image = i
-        if layer>4:
+        image = self.LoadTexture(bpy.context.scene.LevelImp.ForceNewTex,textures,path)
+        if image:
+            tex.image = image
+        if int(layer) > 4:
             mat.blend_method == 'BLEND'
+            
     def ApplyMatSettings(self,mat,textures,path,layer):
         if bpy.context.scene.LevelImp.AsObj:
             return self.ApplyPBSDFMat(mat,textures,path,layer)
@@ -509,6 +525,7 @@ class Mat():
         override = bpy.context.copy()
         override["material"] = mat
         bpy.ops.material.update_f3d_nodes(override)
+        
     def SetGeoMode(self,rdp,mat):
         for a in self.GeoSet:
             try:
@@ -520,6 +537,7 @@ class Mat():
                 setattr(self,a.lower(),False)
             except:
                 print(a.lower(),'clear')
+                
     #Very lazy for now
     def SetCombiner(self,f3d,layer):
         if not hasattr(self,'Combiner'):
@@ -570,6 +588,7 @@ class Mat():
             f3d.combiner2.B_alpha = self.Combiner[13]
             f3d.combiner2.C_alpha = self.Combiner[14]
             f3d.combiner2.D_alpha = self.Combiner[15]
+            
     def EvalFmt(self):
         GBIfmts = {
         "G_IM_FMT_RGBA":"RGBA",

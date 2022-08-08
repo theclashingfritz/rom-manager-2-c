@@ -146,7 +146,7 @@ def OptimizeModeldata(ModelData):
 		ModelData[k][1] = [OptNewMats]
 	return ModelData
 
-def ExportTexture(rom,GetNID,Excess,txt,pos,Trackers,refs,tdir,textures,ImgTypes,t,id,k):
+def ExportTexture(rom, GetNID, Excess, txt, pos, Trackers, refs, tdir, textures, ImgTypes, t, id, k):
 	if t[0]:
 		#textureptrs = raw ptr, bank ptr, length, width, height, imgtype, bitdepth, palette, tile
 		if t in txt:
@@ -186,22 +186,23 @@ def ExportTexture(rom,GetNID,Excess,txt,pos,Trackers,refs,tdir,textures,ImgTypes
 				t[4]=32
 			return (ImgTypes[t[5]],(t[3],t[4],t[6],bin,png))
 
-def ModelWrite(rom,ModelData,nameG,id,tdir,opt,level):
-	#ModelData = start,dl,verts,textureptrs, amb/diff lights, ranges, ids
+def ModelWrite(rom, ModelData, nameG, id, tdir, opt, level):
+	#ModelData = start, dl, verts, textureptrs, amb/diff lights, ranges, ids
 	#create redundancy trackers for each data type
-	S,dl,vbs,txt,amb,diffs,refs=[],[],[],[],[],[],[]
+	S, dl, vbs, txt, amb, diffs, refs = [], [], [], [], [], [], []
 	#indices of which model data they are so I can get IDs backwards while replacing
-	Trackers = [[],[],[],[],[],[]]
+	Trackers = [[], [], [], [], [], []]
 	#keep track of which symbols are rejected to replace later.
 	#[rejected symb, original symb]
 	Excess=[]
 	Eapp = (lambda x,y,z: Excess.append([z%x,z%y]))
 	ImgTypes = {
-	'RGBA':BinPNG.RGBA,
-	'CI':BinPNG.CI,
-	'IA':BinPNG.IA,
-	'I':BinPNG.I
+        'RGBA':BinPNG.RGBA,
+        'CI':BinPNG.CI,
+        'IA':BinPNG.IA,
+        'I':BinPNG.I
 	}
+    
 	#array of pngs for multiprocessing later. Func,args
 	Pngs = []
 	name = nameG/'custom.model.inc.c'
@@ -237,21 +238,21 @@ def ModelWrite(rom,ModelData,nameG,id,tdir,opt,level):
 			continue
 		vbs.append(vb)
 		Trackers[pos].append(k)
-		VBn = 'Vtx VB_%s[]'%(id+hex(vb[0]))
+		VBn = 'Vtx VB_%s[]' % (id + hex(vb[0]))
 		refs.append(VBn)
 		f.write(VBn+' = {\n')
 		for i in range(vb[2]):
-			V=rom[vb[1]+i*16:vb[1]+i*16+16]
-			V=BitArray(V)
-			q=V.unpack('3*int:16,uint:16,2*int:16,4*uint:8')
+			V = rom[vb[1]+i*16:vb[1]+i*16+16]
+			V = BitArray(V)
+			q = V.unpack('3*int:16,uint:16,2*int:16,4*uint:8')
 			#feel there should be a better way to do this
-			Vpos=q[0:3]
-			UV=q[4:6]
-			rgba=q[6:10]
-			V="{{{ %d, %d, %d }, 0, { %d, %d }, { %d, %d, %d, %d}}},"%(*Vpos,*UV,*rgba)
+			Vpos = q[0:3]
+			UV = q[4:6]
+			rgba = q[6:10]
+			V="\t{{{ %d, %d, %d }, 0, { %d, %d }, { %d, %d, %d, %d}}}," % (*Vpos, *UV, *rgba)
 			f.write(V+'\n')
 		f.write('};\n\n')
-	for k,md in enumerate(ModelData):
+	for k, md in enumerate(ModelData):
 		if md[-1]:
 			id = md[-1]
 			GetNID = (lambda pos,id,q: ModelData[Trackers[pos][q]][-1])
@@ -260,7 +261,7 @@ def ModelWrite(rom,ModelData,nameG,id,tdir,opt,level):
 		#textures
 		pos=3
 		for t in md[pos]:
-			img = ExportTexture(rom,GetNID,Excess,txt,pos,Trackers,refs,tdir,textures,ImgTypes,t,id,k)
+			img = ExportTexture(rom, GetNID, Excess, txt, pos, Trackers, refs, tdir, textures, ImgTypes, t, id, k)
 			if img:
 				Pngs.append(img)
 		#lights
@@ -285,7 +286,7 @@ def ModelWrite(rom,ModelData,nameG,id,tdir,opt,level):
 			col1=Amb[0:3]
 			col2=Amb[4:7]
 			dir1=Amb[8:11]
-			f.write("{ %d, %d, %d}, 0, { %d, %d, %d}, 0, { %d, %d, %d}, 0\n};\n\n"%(*col1,*col2,*dir1))
+			f.write("\t{ %d, %d, %d}, 0, { %d, %d, %d}, 0, { %d, %d, %d}, 0\n};\n\n" % (*col1, *col2, *dir1))
 		#Since both lights overlap excess detection, both will use pos=5
 		pos=4
 		for a in md[pos]:
@@ -305,7 +306,7 @@ def ModelWrite(rom,ModelData,nameG,id,tdir,opt,level):
 			Amb=rom[a[0]:a[0]+8]
 			col1=Amb[0:3]
 			col2=Amb[4:7]
-			f.write("{%d, %d, %d}, 0, {%d, %d, %d}, 0\n};\n\n"%(*col1,*col2))
+			f.write("\t{%d, %d, %d}, 0, {%d, %d, %d}, 0\n};\n\n" % (*col1, *col2))
 		#display lists
 		pos=0
 		#because symbols can exist inside DLs and as DLs themselves
@@ -322,7 +323,7 @@ def ModelWrite(rom,ModelData,nameG,id,tdir,opt,level):
 			else:
 				S.append(s)
 				Trackers[pos].append(k)
-		for s,d in zip(md[pos],md[1]):
+		for s,d in zip(md[pos], md[1]):
 			if s in twice:
 				continue
 			DLn = 'Gfx DL_'+id+hex(s[1])+'[]'
@@ -347,10 +348,10 @@ def ModelWrite(rom,ModelData,nameG,id,tdir,opt,level):
 							continue
 					#Just always have combiners repeat first cycle
 					if c.startswith('gsDPSetCombineLERP'):
-						args = c.replace('gsDPSetCombineLERP(','').split(',')
-						args = [*args[:8],*args[:8]]
+						args = c.replace('gsDPSetCombineLERP(', '').split(',')
+						args = [*args[:8], *args[:8]]
 						# args = [*args[:8],' 0',' 0',' 0',' COMBINED',' 0',' 0',' 0',' COMBINED)']
-						c = 'gsDPSetCombineLERP('+','.join(args)[:]+")"
+						c = 'gsDPSetCombineLERP(' + ','.join(args)[:] + ")"
 					if c.startswith('gsDPSetRenderMode') or n==(len(d)-1):
 						if n==(len(d)-1):
 							line=",\n"+c
@@ -369,8 +370,8 @@ def ModelWrite(rom,ModelData,nameG,id,tdir,opt,level):
 				#replace culled data refs with first instance of data
 				for e in Excess:
 					if e[0] in c:
-						c = c.replace(e[0],e[1])
-				f.write(c+',\n')
+						c = c.replace(e[0], e[1])
+				f.write("\t" + c + ',\n')
 			f.write('};\n\n')
 	f.close()
 	p = mp.Pool(mp.cpu_count()-1)
@@ -395,6 +396,7 @@ class F3D_decode():
 	def __init__(self,cmd):
 		self.fmt=DecodeFmt[cmd][0]
 		self.func=DecodeFmt[cmd][1]
+
 	def decode(self,cmd,*args):
 		return [self.fmt,*args]
 
@@ -422,31 +424,33 @@ def Bin2C(cmd,id):
 			q[0]='gsSPDisplayList'
 	return [q[0]+ags,cmd]
 
-def DecodeVDL(rom,start,s,id,opt):
+def DecodeVDL(rom, start, s, id, opt):
 	dl=[[]]
 	#needs (ptr,length)
 	verts=[]
 	#needs (ptr,length)
-	textureptrs=[[0,0,0,0,0,0,0,0,0]]
+	textureptrs=[[0, 0, 0, 0, 0, 0, 0, 0, 0]]
 	#needs ptr
 	amb=[]
 	#neess ptr
 	diffuse=[]
 	x=0
-	ranges = [[0,0,0,0,0,0]]
+	ranges = [[0, 0, 0, 0, 0, 0]]
 	LastMat = Mat(Persist)
 	global gCycle
 	gCycle = 1
 	global gFog
 	gFog = 0
-	return DecodeDL(rom,s,id,dl,verts,textureptrs,amb,diffuse,ranges,x,[start],LastMat,0,opt)
+    
+	return DecodeDL(rom, s, id, dl, verts, textureptrs, amb, diffuse, ranges, x, [start], LastMat, 0, opt)
 
 #recursively get DLs
-def DecodeDL(rom,s,id,dl,verts,textureptrs,amb,diffuse,ranges,x,start,LastMat,dlStack,opt):
+def DecodeDL(rom, s, id, dl, verts, textureptrs, amb, diffuse, ranges, x, start, LastMat, dlStack, opt):
 	global gFog
+    
 	while(True):
-		cmd=rom[start[dlStack][0]+x:start[dlStack][0]+x+8]
-		cmd=Bin2C(cmd,id)
+		cmd = rom[start[dlStack][0] + x:start[dlStack][0]+x+8]
+		cmd = Bin2C(cmd, id)
 		#check if cmd is not needed and can be skipped
 		MSB = cmd[1][:8].uint
 		tile = cmd[1][32:40].uint
@@ -469,13 +473,13 @@ def DecodeDL(rom,s,id,dl,verts,textureptrs,amb,diffuse,ranges,x,start,LastMat,dl
 					setattr(LastMat,str(MSB),cmd[1][8:].uint)
 		#g dl
 		if (MSB==6):
-			ptr=cmd[1][32:64].uint
-			x+=8
+			ptr = cmd[1][32:64].uint
+			x += 8
 			dl[dlStack].append(cmd[0])
 			dl.append([])
-			start.append([s.B2P(ptr),ptr])
-			(dl,verts,textureptrs,amb,diffuse,ranges,start) = DecodeDL(rom,s,id,dl,verts,textureptrs,amb,diffuse,ranges,0,start,LastMat,len(dl)-1,opt)
-			if cmd[1][8:16].uint==1:
+			start.append([s.B2P(ptr), ptr])
+			(dl, verts, textureptrs, amb, diffuse, ranges, start, gFog) = DecodeDL(rom, s, id, dl, verts, textureptrs, amb, diffuse, ranges, 0, start, LastMat, len(dl)-1, opt)
+			if cmd[1][8:16].uint == 1:
 				break
 		#end dl
 		elif (MSB==0xb8):
@@ -486,28 +490,28 @@ def DecodeDL(rom,s,id,dl,verts,textureptrs,amb,diffuse,ranges,x,start,LastMat,dl
 			if not gFog:
 				gFog = 1
 			dl[dlStack].append(cmd[0])
-			x+=8
+			x += 8
 		else:
-			x+=8
+			x += 8
 			#concat 2 tri ones to a tri2
-			q=1
+			q = 1
 			if dl[dlStack]:
 				if dl[dlStack][-1].startswith('gsSP1Triangle') and cmd[0].startswith('gsSP1Triangle'):
-					old=dl[dlStack][-1][14:-1]
-					new=cmd[0][14:-1]
-					dl[dlStack][-1]="gsSP2Triangles("+old+','+new+')'
-					q=0
+					old = dl[dlStack][-1][14:-1]
+					new = cmd[0][14:-1]
+					dl[dlStack][-1] = "gsSP2Triangles(" + old + ', ' + new + ')'
+					q = 0
 			if q:
 				dl[dlStack].append(cmd[0])
-		[ranges,textureptrs,diffuse,amb,verts] = EvalMaterial(MSB,ranges,cmd,textureptrs,diffuse,amb,verts,s,dl[dlStack])
-	ranges[-1][2] = len(dl[dlStack])-1
-	ranges[-1][4] = len(dl[dlStack])-1
+		[ranges, textureptrs, diffuse, amb, verts] = EvalMaterial(MSB, ranges, cmd, textureptrs, diffuse, amb, verts, s, dl[dlStack])
+	ranges[-1][2] = len(dl[dlStack]) - 1
+	ranges[-1][4] = len(dl[dlStack]) - 1
 	ranges[-1][1] = textureptrs[-1].copy()
 	ranges[-1][3] = 1
-	return (dl,verts,textureptrs,amb,diffuse,ranges,start,gFog)
+	return (dl, verts, textureptrs, amb, diffuse, ranges, start, gFog)
 
 #based on the f3d cmd, add things to data objects
-def EvalMaterial(MSB,ranges,cmd,textureptrs,diffuse,amb,verts,s,dl):
+def EvalMaterial(MSB, ranges, cmd, textureptrs, diffuse, amb, verts, s, dl):
 	types = {
 	0:'RGBA',
 	2:'CI',
