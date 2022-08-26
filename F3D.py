@@ -720,7 +720,7 @@ def G_SETOTHERMODE_L_Decode(bin,id):
 			if value==0xC8113078:
 				# print(id+" has fog in it. Visit the model.inc.c file and make sure the setcombine is properly set")
 				return (enum,'G_RM_FOG_SHADE_A', 'G_RM_AA_ZB_TEX_EDGE2')
-			return (enum,0,value)
+			return (enum,0,0)
 		else:
 			return (enum,value)
 	except:
