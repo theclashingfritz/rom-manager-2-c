@@ -488,14 +488,26 @@ def ConnectWarp(rom,cmd,start,script):
     if not A:
         return start
     arg=cmd[2]
-    W=(arg[0],arg[1],arg[2]+script.Aoffset,arg[3],arg[4])
+    W=(arg[0],arg[1],arg[2]+script.Aoffset,arg[3],arg[4], "WARP_NODE")
     A.warps.append(W)
     return start
     
 def PaintingWarp(rom,cmd,start,script):
+    A=script.GetArea()
+    if not A:
+        return start
+    arg=cmd[2]
+    W=(arg[0],arg[1],arg[2]+script.Aoffset,arg[3],arg[4], "PAINTING_WARP_NODE")
+    A.warps.append(W)
     return start
     
 def InstantWarp(rom,cmd,start,script):
+    A=script.GetArea()
+    if not A:
+        return start
+    arg=cmd[2]
+    W=(arg[0],arg[1],U2S(TcH(arg[2:4])),U2S(TcH(arg[4:6])),U2S(TcH(arg[6:8])), "INSTANT_WARP")
+    A.warps.append(W)
     return start
     
 def SetMarioDefault(rom,cmd,start,script):
@@ -849,7 +861,7 @@ def WriteArea(s, area, Anum, id):
     
     # Write Warps
     for w in area.warps:
-        data += '\t' * tab + "WARP_NODE({}, {}, {}, {}, {}),\n".format(*w)
+        data += '\t' * tab + "{}({}, {}, {}, {}, {}),\n".format(w[-1], *w[:-1])
         
     data += '\t' * tab + "RETURN()\n"
     data += "};\n\n"
@@ -968,7 +980,7 @@ def WriteVanillaLevel(rom,s,num,areas,rootdir,m64dir,AllWaterBoxes,Onlys,romname
         for o in area.objects:
             Slines.insert(x,"OBJECT_WITH_ACTS({},{},{},{},{},{},{},{},{},{}),\n".format(*o))
         for w in area.warps:
-            Slines.insert(x,"WARP_NODE({},{},{},{},{}),\n".format(*w))
+            Slines.insert(x, "{}({}, {}, {}, {}, {}),\n".format(w[-1], *w[:-1]))
         if hasattr(area,'macros'):
             Slines.insert(x,"MACRO_OBJECTS(local_macro_objects_%s_%d),\n"%(name,a))
         x=j+x
