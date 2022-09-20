@@ -488,7 +488,7 @@ def ConnectWarp(rom,cmd,start,script):
     if not A:
         return start
     arg=cmd[2]
-    W=(arg[0],arg[1],arg[2]+script.Aoffset,arg[3],arg[4], "WARP_NODE")
+    W=("WARP_NODE",arg[0],arg[1],arg[2]+script.Aoffset,arg[3],arg[4])
     A.warps.append(W)
     return start
     
@@ -497,7 +497,7 @@ def PaintingWarp(rom,cmd,start,script):
     if not A:
         return start
     arg=cmd[2]
-    W=(arg[0],arg[1],arg[2]+script.Aoffset,arg[3],arg[4], "PAINTING_WARP_NODE")
+    W=("PAINTING_WARP_NODE",arg[0],arg[1],arg[2]+script.Aoffset,arg[3],arg[4])
     A.warps.append(W)
     return start
     
@@ -506,7 +506,7 @@ def InstantWarp(rom,cmd,start,script):
     if not A:
         return start
     arg=cmd[2]
-    W=(arg[0],arg[1],U2S(TcH(arg[2:4])),U2S(TcH(arg[4:6])),U2S(TcH(arg[6:8])), "INSTANT_WARP")
+    W=("INSTANT_WARP",arg[0],arg[1],U2S(TcH(arg[2:4])),U2S(TcH(arg[4:6])),U2S(TcH(arg[6:8])))
     A.warps.append(W)
     return start
     
@@ -861,7 +861,7 @@ def WriteArea(s, area, Anum, id):
     
     # Write Warps
     for w in area.warps:
-        data += '\t' * tab + "{}({}, {}, {}, {}, {}),\n".format(w[-1], *w[:-1])
+        data += '\t' * tab + "{}({}, {}, {}, {}, {}),\n".format(*w)
         
     data += '\t' * tab + "RETURN()\n"
     data += "};\n\n"
@@ -980,7 +980,7 @@ def WriteVanillaLevel(rom,s,num,areas,rootdir,m64dir,AllWaterBoxes,Onlys,romname
         for o in area.objects:
             Slines.insert(x,"OBJECT_WITH_ACTS({},{},{},{},{},{},{},{},{},{}),\n".format(*o))
         for w in area.warps:
-            Slines.insert(x, "{}({}, {}, {}, {}, {}),\n".format(w[-1], *w[:-1]))
+            Slines.insert(x, "{}({}, {}, {}, {}, {}),\n".format(*w))
         if hasattr(area,'macros'):
             Slines.insert(x,"MACRO_OBJECTS(local_macro_objects_%s_%d),\n"%(name,a))
         x=j+x
