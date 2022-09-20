@@ -980,7 +980,7 @@ def WriteVanillaLevel(rom,s,num,areas,rootdir,m64dir,AllWaterBoxes,Onlys,romname
         for o in area.objects:
             Slines.insert(x,"OBJECT_WITH_ACTS({},{},{},{},{},{},{},{},{},{}),\n".format(*o))
         for w in area.warps:
-            Slines.insert(x, "{}({}, {}, {}, {}, {}),\n".format(*w))
+            Slines.insert(x, "{}({},{},{},{},{}),\n".format(*w))
         if hasattr(area,'macros'):
             Slines.insert(x,"MACRO_OBJECTS(local_macro_objects_%s_%d),\n"%(name,a))
         x=j+x
